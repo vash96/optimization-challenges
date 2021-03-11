@@ -85,7 +85,7 @@ void doMagic()
     auto t0 = chrono::high_resolution_clock::now();
     auto t1 = t0;
 
-    // SolutionType current, best = current;
+    // SolutionType current = solution;
     int initialScore = getScore(/*current*/);
     int bestScore = initialScore;
     ScoreManager scoreManager(initialScore);
@@ -116,6 +116,7 @@ void doMagic()
 
         if(bestDelta > 0) {
             bestScore = scoreManager.score;
+	    // solution = current;
         }
 
 
