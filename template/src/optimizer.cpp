@@ -36,10 +36,10 @@ int main(int argc, char** argv)
     ios_base::sync_with_stdio(false);
     ArgSanitize(argc, argv);
 
-    ReadInput( string("input/") + ProblemName + ".txt" );
-    ReadSolution( string("output/") + ProblemName + ".greedy" );
+    ReadInput( string("../input/") + ProblemName + ".txt" );
+    ReadSolution( string("../output/") + ProblemName + ".greedy" );
     DoMagic();
-    PrintSolution( string("output/") + ProblemName + ".opt" );
+    PrintSolution( string("../output/") + ProblemName + ".opt" );
 
     return 0;
 }
