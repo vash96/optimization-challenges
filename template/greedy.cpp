@@ -1,47 +1,70 @@
 #include <bits/stdc++.h>
+#include "utils.cpp"
 using namespace std;
-constexpr array<const char*, 6> validNames = {{"a", "b", "c", "d", "e", "f"}};
-string problemName;
+constexpr array<const char*, 1> ValidNames = {{"ADD-VALID-NAMES!!"}};
+string ProblemName;
+uint64_t SEED = 0;
 
 
-void argSanitize(int, char**);
-void readInput(string);
-void greedy();
-void printSolution(string);
+void ArgSanitize(int, char**);
+void ReadInput(string);
+void Greedy();
+void PrintSolution(string);
 
 
 int main(int argc, char** argv)
 {
     ios_base::sync_with_stdio(false);
-    argSanitize(argc, argv);
+    ArgSanitize(argc, argv);
 
-    readInput( string("input/") + problemName + ".txt" );
-    greedy();
-    printSolution( string("output/") + problemName + ".greedy" );
+    ReadInput( string("input/") + ProblemName + ".txt" );
+    Greedy();
+    PrintSolution( string("output/") + ProblemName + ".greedy" );
 
     return 0;
 }
 
 
-void argSanitize(int argc, char** argv)
+void ArgSanitize(int argc, char** argv)
 {
-    if(argc != 2) {
-        cerr << "Wrong number of parameters...\n";
-        cerr << "Usage: " << argv[0] << " <problem-name>" << endl;
-        exit(1);
-    }
+    for(int i=1; i<argc; ) {
+        string arg = argv[i];
+        if(arg.substr(0, 2) == "--") {
+            arg = arg.substr(2);
+            if(arg.c_str() == "problem") {
+                if(i+1 < argc) {
+                    ProblemName = argv[i+1];
+                    i += 2;
 
-    problemName = argv[1];
-
-    if(find(validNames.begin(), validNames.end(), problemName.c_str()) 
-        == validNames.end()
-    ) {
-        cerr << "Problem name is not valid. Check valid name list!" << endl;
-        exit(1);
+                    if(find(ValidNames.begin(), ValidNames.end(), ProblemName.c_str())
+                        == ValidNames.end()
+                    ) {
+                        cerr << "Problem name is not valid!" << endl;
+                        exit(1);
+                    }
+                }else {
+                    cerr << "Missing name after --problem argument!" << endl;
+                    exit(1);
+                }
+            }else if(arg.c_str() == "seed") {
+                if(i+1 < argc) {
+                    SEED = atoi(argv[i+1]);
+                    i += 2;
+                }else {
+                    cerr << "Missing seed after --seed argument!" << endl;
+                    exit(1);
+                }
+            }else {
+                cerr << "Unknown argument --" << arg << ". Valid arguments are: " << endl;
+                cerr << "\t--problem <problem name>" << endl;
+                cerr << "\t--seed <seed value>" << endl;
+                exit(1);
+            }
+        }
     }
 }
 
-void readInput(string filename)
+void ReadInput(string filename)
 {
     ifstream in(filename);
     if(not in) {
@@ -52,12 +75,12 @@ void readInput(string filename)
     cerr << "Reading input from " << filename << " ... " << endl;
 }
 
-void greedy()
+void Greedy()
 {
     cerr << "Pot of Greed: draw 2 cards." << endl;
 }
 
-void printSolution(string filename)
+void PrintSolution(string filename)
 {
     ofstream out(filename);
     
