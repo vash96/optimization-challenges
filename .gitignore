@@ -1,5 +1,11 @@
 .vscode/
 **.vscode/
+
 **input/*
+!**input/.gitkeep
+
 **output/*
+!**output/.gitkeep
+
 **bin/*
+!**bin/.gitkeep
