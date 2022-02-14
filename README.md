@@ -22,3 +22,6 @@ The directory hierarchy is the following:
     ├── optimizer.cpp
     └── utils.cpp
 ```
+
+```bash
+bin```
