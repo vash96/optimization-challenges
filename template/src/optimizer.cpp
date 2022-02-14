@@ -175,7 +175,7 @@ void DoMagic()
 
         ScoreType bestDelta = MINIMIZE ? oo : -oo;
         // MoveType bestMove = -1;
-        for(int r=0; r<CANDIDATE_MOVES; ++r) {
+        for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
             if(delta[r] * (MINIMIZE ? -1 : +1) > bestDelta * (MINIMIZE ? -1 : +1)) {
                 bestDelta = delta[r];
                 // bestMove = candidate[r];
