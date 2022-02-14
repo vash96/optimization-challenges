@@ -1,8 +1,8 @@
 #include <bits/stdc++.h>
 #include "utils.cpp"
 using namespace std;
-constexpr array<const char*, 1> ValidNames = {{"ADD-VALID-NAMES!!"}};
-string ProblemName;
+array<string, 1> ValidNames = {{"ADD-VALID-NAMES!!"}};
+string ProblemName = "UNKNOWN";
 uint64_t SEED = 0;
 
 
@@ -31,27 +31,27 @@ void ArgSanitize(int argc, char** argv)
         string arg = argv[i];
         if(arg.substr(0, 2) == "--") {
             arg = arg.substr(2);
-            if(arg.c_str() == "problem") {
+            if(arg == "problem") {
                 if(i+1 < argc) {
                     ProblemName = argv[i+1];
                     i += 2;
 
-                    if(find(ValidNames.begin(), ValidNames.end(), ProblemName.c_str())
+                    if(find(ValidNames.begin(), ValidNames.end(), ProblemName)
                         == ValidNames.end()
                     ) {
                         cerr << "Problem name is not valid!" << endl;
                         exit(1);
                     }
                 }else {
-                    cerr << "Missing name after --problem argument!" << endl;
+                    cerr << "Missing name after `--problem` argument!" << endl;
                     exit(1);
                 }
-            }else if(arg.c_str() == "seed") {
+            }else if(arg == "seed") {
                 if(i+1 < argc) {
                     SEED = atoi(argv[i+1]);
                     i += 2;
                 }else {
-                    cerr << "Missing seed after --seed argument!" << endl;
+                    cerr << "Missing seed after `--seed` argument!" << endl;
                     exit(1);
                 }
             }else {
@@ -60,7 +60,18 @@ void ArgSanitize(int argc, char** argv)
                 cerr << "\t--seed <seed value>" << endl;
                 exit(1);
             }
+        }else {
+            cerr << "Wrong form of argument. Must be pre-pended with `--`." << endl;
+            exit(1);
         }
+    }
+
+    if(ProblemName == "UNKNOWN") {
+        cerr << "Missing problem name. Use `--problem <problem name>` argument!" << endl;
+    }
+
+    if(SEED == 0) {
+        cerr << "Warning! SEED set to 0!" << endl;
     }
 }
 
