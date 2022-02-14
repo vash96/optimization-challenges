@@ -1,11 +1,11 @@
 .vscode/
-**.vscode/
+**/vscode/
 
-**input/*
-!**input/.gitkeep
+**/input/*
+!**/input/.gitkeep
 
-**output/*
-!**output/.gitkeep
+**/output/*
+!**/output/.gitkeep
 
-**bin/*
-!**bin/.gitkeep
+**/bin/*
+!**/bin/.gitkeep
