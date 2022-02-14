@@ -2,6 +2,8 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+constexpr int64_t oo = numeric_limits<int64_t>::max();
+
 struct PRNG {
     uint64_t seed{};
 
@@ -19,7 +21,7 @@ struct PRNG {
 
 // Print the score (+increment) everytime the score gets an increment 
 // of at least some threshold from last print 
-template<typename ScoreType=int>
+template<typename ScoreType=int64_t>
 struct ScoreManager {
     ScoreType score;
     ScoreType lastUpdate;
