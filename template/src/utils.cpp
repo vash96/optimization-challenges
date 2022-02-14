@@ -25,8 +25,8 @@ template<typename ScoreType=int64_t>
 struct ScoreManager {
     ScoreType score;
     ScoreType lastUpdate;
-    double threshold;
     bool MINIMIZE;
+    double threshold;
 
     ScoreManager(ScoreType score, bool MINIMIZE=false, double threshold=0.05)
         : score(score), lastUpdate(score), MINIMIZE(MINIMIZE), threshold(threshold) { }
