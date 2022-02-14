@@ -1,17 +1,17 @@
 DEBUG_OPTS = -std=c++17 -O3 -Wall -Wfatal-errors -Wextra -pedantic
 RUN_OPTS = -std=c++17 -O3 -DNDEBUG -fopenmp
 
-greedy-debug: greedy.cpp
-	g++ $(DEBUG_OPTS) greedy.cpp -o greedy-debug
+greedy-debug: src/greedy.cpp
+	g++ $(DEBUG_OPTS) src/greedy.cpp -o bin/greedy-debug
 
-greedy: greedy.cpp
-	g++ $(RUN_OPTS) greedy.cpp -o greedy
+greedy: src/greedy.cpp
+	g++ $(RUN_OPTS) src/greedy.cpp -o bin/greedy
 
-opt-debug: optimizer.cpp
-	g++ $(DEBUG_OPTS) optimizer.cpp -o opt-debug
+opt-debug: src/optimizer.cpp
+	g++ $(DEBUG_OPTS) src/optimizer.cpp -o bin/opt-debug
 
-opt: optimizer.cpp
-	g++ $(RUN_OPTS) optimizer.cpp -o opt
+opt: src/optimizer.cpp
+	g++ $(RUN_OPTS) src/optimizer.cpp -o bin/opt
 
 
 clean:
