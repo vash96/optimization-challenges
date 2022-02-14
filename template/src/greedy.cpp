@@ -17,9 +17,9 @@ int main(int argc, char** argv)
     ios_base::sync_with_stdio(false);
     ArgSanitize(argc, argv);
 
-    ReadInput( string("../input/") + ProblemName + ".txt" );
+    ReadInput( string("input/") + ProblemName + ".txt" );
     Greedy();
-    PrintSolution( string("../output/") + ProblemName + ".greedy" );
+    PrintSolution( string("output/") + ProblemName + ".greedy" );
 
     return 0;
 }
