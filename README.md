@@ -11,12 +11,14 @@ This repo contains a template to structure the code for such a challenge.
 
 # The structure
 The directory hierarchy is the following:
-`main_folder:
-|---bin
-|---input
-|---output
-|---src:
-    |---greedy.cpp
-    |---optimizer.cpp
-    |---utils.cpp
-|---Makefile`
+```bash
+.
+├── bin
+├── input
+├── Makefile
+├── output
+└── src
+    ├── greedy.cpp
+    ├── optimizer.cpp
+    └── utils.cpp
+```
