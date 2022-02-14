@@ -18,10 +18,10 @@ clean:
 	rm -f bin/greedy-debug bin/greedy bin/opt-debug bin/opt
 
 zip-greedy:
-	zip src/utils.cpp src/greedy.cpp
+	zip archive.zip src/utils.cpp src/greedy.cpp
 
 zip-opt:
-	zip src/utils.cpp src/greedy.cpp src/optimizer.cpp
+	zip archive.zip src/utils.cpp src/greedy.cpp src/optimizer.cpp
 
 
 .PHONY: clean greedy-debug greedy opt-debug opt
