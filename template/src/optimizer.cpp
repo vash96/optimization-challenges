@@ -4,7 +4,7 @@ using namespace std;
 constexpr array<const char*, 1> ValidNames = {{"ADD-VALID-NAMES!!!"}};
 string ProblemName;
 uint64_t SEED = 0;
-size_t CANDIDATE_MOVES = 0;
+size_t CANDIDATE_MOVES = 1;
 double TIME_LIMIT = oo;
 
 bool MAXIMIZE = true;
@@ -108,8 +108,8 @@ void ArgSanitize(int argc, char** argv)
         }
     }
 
-    if(CANDIDATE_MOVES == 0) {
-        cerr << "Warning! CANDIDATE_MOVES set to 0!" << endl;
+    if(CANDIDATE_MOVES == 1) {
+        cerr << "Warning! CANDIDATE_MOVES set to 1!" << endl;
     }
 
     if(SEED == 0) {
