@@ -5,7 +5,7 @@ using namespace std;
 constexpr int64_t oo = numeric_limits<int64_t>::max();
 
 struct PRNG {
-    uint64_t seed{};
+    uint64_t seed;
 
     PRNG(uint64_t seed=0) : seed(seed) {}
 
@@ -26,15 +26,16 @@ struct ScoreManager {
     ScoreType score;
     ScoreType lastUpdate;
     double threshold;
+    bool MINIMIZE;
 
-    ScoreManager(ScoreType score, double threshold=0.05)
-        : score(score), lastUpdate(score), threshold(threshold) { }
+    ScoreManager(ScoreType score, bool MINIMIZE=false, double threshold=0.05)
+        : score(score), lastUpdate(score), MINIMIZE(MINIMIZE), threshold(threshold) { }
 
     void operator+=(ScoreType delta) {
         score += delta;
-        if(static_cast<double>(score-lastUpdate) >= threshold * lastUpdate) {
+        if(static_cast<double>(score-lastUpdate) * (MINIMIZE ? -1 : +1) >= threshold * lastUpdate * (MINIMIZE ? -1 : +1)) {
             // If score incremented more than threshold % print
-            cerr << "Current score: " << score << "\t\t[Increment +" << (score-lastUpdate) << "]\n";
+            cerr << "Current score: " << score << "\t\t[Improvement: " << (score-lastUpdate) << "]\n";
             lastUpdate = score;
         }
     }
