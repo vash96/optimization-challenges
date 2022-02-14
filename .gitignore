@@ -1,5 +1,5 @@
 .vscode/
 **.vscode/
-**input/
-**output/
-**bin/
+**input/*
+**output/*
+**bin/*
