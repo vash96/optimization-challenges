@@ -30,18 +30,18 @@ The directory hierarchy is the following:
 and writes a solution to `output/<problem>.greedy`  
 
 The usage is:
-```bash
+```
 make greedy
 ./bin/greedy --problem <problem> [--seed <seed-value>]
 ```
 Options in brackets are optional.
 
 
-`optimizer.cpp` contains a template for local search (hill climbing) algorithm. It reads an input file `<filename>` from `input/<filename>`,
-a corresponding greedy solution from `output/<filename>.greedy` and writes an optimized solution to `output/<filename>.opt`  
+`optimizer.cpp` contains a template for local search (hill climbing) algorithm. It reads an input file `<problem>` from `input/<problem>`,
+a corresponding greedy solution from `output/<problem>.greedy` and writes an optimized solution to `output/<problem>.opt`  
 
 The usage is:
-```bash
+```
 make opt
 ./bin/opt --problem <problem> [--seed <seed-value>, --time-limit <seconds>, --cand-limit <number-of-moves>, --minimize]
 ```
