@@ -7,7 +7,7 @@ uint64_t SEED = 0;
 size_t CANDIDATE_MOVES = 0;
 double TIME_LIMIT = oo;
 
-bool MINIMIZE = false;
+bool MAXIMIZE = true;
 
 
 using ScoreType = int64_t; // CHANGE IF NEEDED
@@ -91,7 +91,7 @@ void ArgSanitize(int argc, char** argv)
                     exit(1);
                 }
             }else if(arg == "minimize") {
-                MINIMIZE = true;
+                MAXIMIZE = false;
                 i += 1;
             }else {
                 cerr << "Unknown argument --" << arg << ". Valid arguments are: " << endl;
@@ -159,24 +159,24 @@ void DoMagic()
     // SolutionType current = solution;
     ScoreType initialScore = GetScore(/*current*/);
     ScoreType bestScore = initialScore;
-    ScoreManager<ScoreType> scoreManager(initialScore, MINIMIZE);
+    ScoreManager<ScoreType> scoreManager(initialScore, MAXIMIZE);
 
     do {
         // Draw some number of random moves and apply the best one
 
-        vector<ScoreType> delta(CANDIDATE_MOVES, MINIMIZE ? oo : -oo);
+        vector<ScoreType> delta(CANDIDATE_MOVES, MAXIMIZE ? oo : -oo);
         // vector<MoveType> candidate(RAND_LIMIT);
         #pragma omp parallel for
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
-            // MoveType mv = drawRandomMove();
+            // MoveType mv = DrawRandomMove();
             delta[r] = DeltaCost(/*current, mv*/);
             // candidate[r] = mv;
         }
 
-        ScoreType bestDelta = MINIMIZE ? oo : -oo;
+        ScoreType bestDelta = MAXIMIZE ? oo : -oo;
         // MoveType bestMove = -1;
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
-            if(delta[r] * (MINIMIZE ? -1 : +1) > bestDelta * (MINIMIZE ? -1 : +1)) {
+            if(delta[r] * (MAXIMIZE ? +1 : -1) > bestDelta * (MAXIMIZE ? +1 : -1)) {
                 bestDelta = delta[r];
                 // bestMove = candidate[r];
             }

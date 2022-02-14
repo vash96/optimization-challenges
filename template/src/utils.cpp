@@ -25,15 +25,15 @@ template<typename ScoreType=int64_t>
 struct ScoreManager {
     ScoreType score;
     ScoreType lastUpdate;
-    bool MINIMIZE;
+    bool MAXIMIZE;
     double threshold;
 
-    ScoreManager(ScoreType score, bool MINIMIZE=false, double threshold=0.05)
-        : score(score), lastUpdate(score), MINIMIZE(MINIMIZE), threshold(threshold) { }
+    ScoreManager(ScoreType score, bool MAXIMIZE=false, double threshold=0.05)
+        : score(score), lastUpdate(score), MAXIMIZE(MAXIMIZE), threshold(threshold) { }
 
     void operator+=(ScoreType delta) {
         score += delta;
-        if(static_cast<double>(score-lastUpdate) * (MINIMIZE ? -1 : +1) >= threshold * lastUpdate * (MINIMIZE ? -1 : +1)) {
+        if(static_cast<double>(score-lastUpdate) * (MAXIMIZE ? +1 : -1) >= threshold * lastUpdate * (MAXIMIZE ? +1 : -1)) {
             // If score incremented more than threshold % print
             cerr << "Current score: " << score << "\t\t[Improvement: " << (score-lastUpdate) << "]\n";
             lastUpdate = score;
