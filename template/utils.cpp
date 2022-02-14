@@ -8,7 +8,7 @@ struct PRNG {
     PRNG(uint64_t seed=0) : seed(seed) {}
 
 
-    uint64_t next()
+    uint64_t operator()()
     {
         uint64_t z = (seed += UINT64_C(0x9E3779B97F4A7C15));
         z = (z ^ (z >> 30)) * UINT64_C(0xBF58476D1CE4E5B9);
