@@ -1,11 +1,12 @@
 #include <bits/stdc++.h>
 #include "utils.cpp"    // ScoreManager, Rand
 using namespace std;
+using namespace chrono;
 constexpr array<const char*, 5> ValidNames = {{"a", "b", "c", "d", "e"}};
 string ProblemName;
 uint64_t SEED = 0;
 size_t CANDIDATE_MOVES = 1;
-double TIME_LIMIT = oo;
+seconds TIME_LIMIT(oo);
 
 bool MAXIMIZE = true;
 
@@ -28,7 +29,7 @@ bool IsBetterMove(ScoreType, ScoreType); // SIMULATED ANNEALING
 void ApplyMove(SolutionType&, const MoveType&);
 void PrintSolution(string);
 
-double GlobalTemperature = 1.0, CoolingFactor = 0.99999;
+double GlobalTemperature = 1.0, CoolingFactor = 0.99;
 random_device rd;
 default_random_engine eng(rd());
 uniform_real_distribution<double> prob(0.0, 1.0);
@@ -75,6 +76,7 @@ struct Client {
 
 vector<Client> clients;
 vector<vector<int>> who_likes, who_dislikes;
+vector<int> liked_in, disliked_in;
 
 
 SolutionType best, initial;
@@ -125,7 +127,7 @@ void ArgSanitize(int argc, char** argv)
                 }
             }else if(arg == "time-limit") {
                 if(i+1 < argc) {
-                    TIME_LIMIT = atoi(argv[i+1]);
+                    TIME_LIMIT =   seconds(atoi(argv[i+1]));
                     i += 2;
                 }else {
                     cerr << "Missing time-limit after `--time-limit` argument!" << endl;
@@ -165,7 +167,7 @@ void ArgSanitize(int argc, char** argv)
         cerr << "Warning! SEED set to 0!" << endl;
     }
 
-    if(TIME_LIMIT == oo) {
+    if(TIME_LIMIT ==   seconds(oo)) {
         cerr << "Warning! TIME_LIMIT set to infinity!" << endl;
     }
 
@@ -186,6 +188,8 @@ void ReadInput(string filename)
     cerr << "Reading input from " << filename << " ... " << endl;
     in >> C;
     clients.resize(C);
+    liked_in.resize(C, 0);
+    disliked_in.resize(C, 0);
 
     for(int i=0; i<C; ++i) {
         auto & client = clients[i];
@@ -223,6 +227,12 @@ void ReadSolution(string filename)
         static string ingr;
         in >> ingr;
         initial[ ingr_to_id[ingr] ] = true;
+        for(auto i : who_likes[ ingr_to_id[ingr] ]) {
+            ++liked_in[i];
+        }
+        for(auto i : who_dislikes[ ingr_to_id[ingr] ]) {
+            ++disliked_in[i];
+        }
     }
 }
 
@@ -230,18 +240,22 @@ void DoMagic()
 {
     cerr << "Invoking the power of the underworld..." << endl;
 
-    auto t0 = chrono::high_resolution_clock::now();
+    auto t0 =   high_resolution_clock::now();
     auto t1 = t0;
 
     SolutionType current = best = initial;
     ScoreType initialScore = GetScore(current);
     ScoreType bestScore = initialScore;
     ScoreManager<ScoreType> scoreManager(initialScore, MAXIMIZE);
+    TimeManager timeManager(TIME_LIMIT);
+    TimeManager<false> coolingSchedule(TIME_LIMIT, 5ms);
 
     PRNG prng(SEED);
 
+    int64_t n_iter = 0;
     do {
         // Draw some number of random moves and apply the best one
+        ++n_iter;
 
         vector<ScoreType> delta(CANDIDATE_MOVES, MAXIMIZE ? -oo : +oo);
         vector<MoveType> candidate(CANDIDATE_MOVES);
@@ -273,14 +287,18 @@ void DoMagic()
         }
 
 
-        t1 = chrono::high_resolution_clock::now();
+        timeManager.update();
+        coolingSchedule.update();
 
-        GlobalTemperature *= CoolingFactor;
+        if (coolingSchedule.event()) {
+            GlobalTemperature *= CoolingFactor;
+        }
 
-    }while( chrono::duration<double>(t1 - t0).count() < TIME_LIMIT );
+    }while(timeManager.alive());
 
     cerr << "Optimized score: " << bestScore << "\t\t[Improvement: " << 1. * abs(bestScore - initialScore) / bestScore << "]" << endl;
     cerr << "Global Temperature is " << GlobalTemperature << endl;
+    cerr << "Number of iterations: " << n_iter << endl;
 }
 
 
@@ -308,9 +326,31 @@ ScoreType GetScore(const SolutionType & sol)
 ScoreType DeltaCost(const SolutionType & sol, const MoveType & mv)
 {
     ScoreType delta=0;
-    SolutionType tmp(sol);
-    ApplyMove(tmp, mv);
-    delta = GetScore(tmp) - GetScore(sol);
+    // SolutionType tmp(sol);
+    // ApplyMove(tmp, mv);
+    // delta = GetScore(tmp) - GetScore(sol);
+
+
+    if(sol[mv]) { // We are removing mv from current sol
+        for(auto i : who_likes[mv]) {
+                delta -= liked_in[i] == clients[i].L and disliked_in[i] == 0;
+        }
+
+        // Now it could be the case that some who dislikes mv
+        // is able to be reinserted in the count
+        for(auto i : who_dislikes[mv]) {
+            delta += liked_in[i] == clients[i].L and disliked_in[i]-1 == 0;
+        }
+
+    }else { // We are inserting move to current sol
+        for(auto i : who_dislikes[mv]) {
+            delta -= liked_in[i] == clients[i].L and disliked_in[i] == 0;
+        }
+
+        for(auto i : who_likes[mv]) {
+            delta += liked_in[i]+1 == clients[i].L and disliked_in[i] == 0;
+        }
+    }
 
     return delta;
 }
@@ -333,7 +373,16 @@ MoveType DrawRandomMove(PRNG & Random)
 
 void ApplyMove(SolutionType & sol, const MoveType & mv)
 {
+    int val = sol[mv] ? -1 : +1;
     sol[mv] = sol[mv] ? false : true;
+
+    for(auto i : who_likes[mv]) {
+        liked_in[i] += val;
+    }
+    
+    for(auto i : who_dislikes[mv]) {
+        disliked_in[i] += val;
+    }
 }
 
 
