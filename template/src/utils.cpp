@@ -1,6 +1,7 @@
 #pragma once
 #include <bits/stdc++.h>
 using namespace std;
+using namespace chrono;
 
 constexpr int64_t oo = numeric_limits<int64_t>::max();
 
@@ -46,7 +47,7 @@ struct ScoreManager {
 template<bool Verbose=true>
 struct TimeManager {
     using Time =   milliseconds;
-    using TimePoint =   time_point<  high_resolution_clock>;
+    using TimePoint =   time_point<high_resolution_clock>;
 
     Time lifetime, threshold, passed;
     TimePoint epoch;
