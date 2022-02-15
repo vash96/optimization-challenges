@@ -1,5 +1,5 @@
-DEBUG_OPTS = -std=c++17 -O3 -Wall -Wfatal-errors -Wextra -pedantic
-RUN_OPTS = -std=c++17 -O3 -DNDEBUG -fopenmp
+DEBUG_OPTS = -std=c++20 -O3 -Wall -Wfatal-errors -Wextra -pedantic
+RUN_OPTS = -std=c++20 -O3 -DNDEBUG -fopenmp
 
 greedy-debug: src/greedy.cpp
 	g++ $(DEBUG_OPTS) src/greedy.cpp -o bin/greedy-debug
