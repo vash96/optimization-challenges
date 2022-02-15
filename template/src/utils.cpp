@@ -41,3 +41,38 @@ struct ScoreManager {
         }
     }
 };
+
+
+template<bool Verbose=true>
+struct TimeManager {
+    using Time =   milliseconds;
+    using TimePoint =   time_point<  high_resolution_clock>;
+
+    Time lifetime, threshold, passed;
+    TimePoint epoch;
+
+    TimeManager(Time lifetime, Time threshold=15s) 
+        : lifetime(lifetime), threshold(threshold), passed(0s), epoch(  high_resolution_clock::now()) {}
+
+    void update() {
+        auto now =   high_resolution_clock::now();
+        passed =   duration_cast<Time>(now - epoch);
+        
+        if( event() ) {
+            epoch = now;
+            lifetime -= threshold;
+            lifetime = max(lifetime, 0ms);
+            if constexpr (Verbose) {
+                cerr << "You have left to live only " << duration_cast<seconds>(lifetime).count() << " seconds, I'm terribly sorry (or maybe not).\n";
+            }
+        }
+    }
+
+    bool alive() {
+        return lifetime > 0s;
+    }
+
+    bool event() {
+        return passed > threshold;
+    }
+};
