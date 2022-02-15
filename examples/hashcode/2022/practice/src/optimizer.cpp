@@ -16,13 +16,15 @@ using MoveType = int; // A move inserts/deletes an ingredient from the pizza
 
 
 
+
 void ArgSanitize(int, char**);
 void ReadInput(string);
 void ReadSolution(string);
 void DoMagic();
 ScoreType GetScore(const SolutionType&);
-ScoreType DeltaCost(const SolutionType&, const MoveType&);
 MoveType DrawRandomMove(PRNG&);
+ScoreType DeltaCost(const SolutionType&, const MoveType&);
+bool IsBetterMove(ScoreType, ScoreType); // CHANGE THIS TO ADAPT TO SIMULATED ANNEALING
 void ApplyMove(SolutionType&, const MoveType&);
 void PrintSolution(string);
 
@@ -70,9 +72,7 @@ vector<Client> clients;
 vector<vector<int>> who_likes, who_dislikes;
 
 
-
-
-SolutionType initial, best;
+SolutionType best, initial;
 
 
 int main(int argc, char** argv)
@@ -229,7 +229,7 @@ void DoMagic()
     auto t1 = t0;
 
     SolutionType current = best = initial;
-    ScoreType initialScore = GetScore(initial);
+    ScoreType initialScore = GetScore(current);
     ScoreType bestScore = initialScore;
     ScoreManager<ScoreType> scoreManager(initialScore, MAXIMIZE);
 
@@ -238,8 +238,9 @@ void DoMagic()
     do {
         // Draw some number of random moves and apply the best one
 
-        vector<ScoreType> delta(CANDIDATE_MOVES, MAXIMIZE ? oo : -oo);
+        vector<ScoreType> delta(CANDIDATE_MOVES, MAXIMIZE ? -oo : +oo);
         vector<MoveType> candidate(CANDIDATE_MOVES);
+
         #pragma omp parallel for
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
             MoveType mv = DrawRandomMove(prng);
@@ -248,18 +249,20 @@ void DoMagic()
         }
 
         ScoreType bestDelta = MAXIMIZE ? -oo : +oo;
-        MoveType bestMove = -1;
+        MoveType bestMove = -1; // SET CORRECT DUMMY MOVE
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
-            if(delta[r] * (MAXIMIZE ? +1 : -1) > bestDelta * (MAXIMIZE ? +1 : -1)) {
+            if( IsBetterMove(delta[r], bestDelta) ) {
                 bestDelta = delta[r];
                 bestMove = candidate[r];
             }
         }
 
-        ApplyMove(current, bestMove);
-        scoreManager += bestDelta;
+        if(bestDelta != (MAXIMIZE ? -oo : +oo)) {
+            ApplyMove(current, bestMove);
+            scoreManager += bestDelta;
+        }
 
-        if(bestDelta > 0) {
+        if(scoreManager.score * (MAXIMIZE ? +1 : -1) > bestScore * (MAXIMIZE ? +1 : -1)) {
             bestScore = scoreManager.score;
 	        best = current;
         }
@@ -297,12 +300,16 @@ ScoreType GetScore(const SolutionType & sol)
 ScoreType DeltaCost(const SolutionType & sol, const MoveType & mv)
 {
     ScoreType delta=0;
-
-    auto tmp(sol);
+    SolutionType tmp(sol);
     ApplyMove(tmp, mv);
     delta = GetScore(tmp) - GetScore(sol);
 
     return delta;
+}
+
+bool IsBetterMove(ScoreType newDelta, ScoreType oldDelta)
+{
+    return newDelta * (MAXIMIZE ? +1 : -1) > oldDelta * (MAXIMIZE ? +1 : -1);
 }
 
 MoveType DrawRandomMove(PRNG & Random)
@@ -322,7 +329,7 @@ void PrintSolution(string filename)
     
     cerr << "Writing solution to file " << filename << " ... " << endl;
 
-    // Print "solution" variable
+    // Print "best"
     int M = count_if(best.begin(), best.end(), [](bool x) { return x; });
     out << M << " ";
     for(int i=0; i<K; ++i) {
@@ -332,5 +339,3 @@ void PrintSolution(string filename)
     }
     out << endl;
 }
-
-
