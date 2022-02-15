@@ -240,9 +240,6 @@ void DoMagic()
 {
     cerr << "Invoking the power of the underworld..." << endl;
 
-    auto t0 =   high_resolution_clock::now();
-    auto t1 = t0;
-
     SolutionType current = best = initial;
     ScoreType initialScore = GetScore(current);
     ScoreType bestScore = initialScore;
@@ -326,10 +323,6 @@ ScoreType GetScore(const SolutionType & sol)
 ScoreType DeltaCost(const SolutionType & sol, const MoveType & mv)
 {
     ScoreType delta=0;
-    // SolutionType tmp(sol);
-    // ApplyMove(tmp, mv);
-    // delta = GetScore(tmp) - GetScore(sol);
-
 
     if(sol[mv]) { // We are removing mv from current sol
         for(auto i : who_likes[mv]) {
@@ -351,6 +344,19 @@ ScoreType DeltaCost(const SolutionType & sol, const MoveType & mv)
             delta += liked_in[i]+1 == clients[i].L and disliked_in[i] == 0;
         }
     }
+
+    #ifndef NDEBUG
+        ScoreType realDelta = 0;
+
+        SolutionType tmp(sol);
+        ApplyMove(tmp, mv);
+        realDelta = GetScore(tmp) - GetScore(sol);
+
+        if(realDelta != delta) {
+            cerr << "Error: mismatch of Move Cost! Either DeltaCost is wrong or you are not maintaining correctly the state of the solution!" << endl;
+            exit(1);
+        }
+    #endif
 
     return delta;
 }
