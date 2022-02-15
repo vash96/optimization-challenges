@@ -24,9 +24,14 @@ void DoMagic();
 ScoreType GetScore(const SolutionType&);
 MoveType DrawRandomMove(PRNG&);
 ScoreType DeltaCost(const SolutionType&, const MoveType&);
-bool IsBetterMove(ScoreType, ScoreType); // CHANGE THIS TO ADAPT TO SIMULATED ANNEALING
+bool IsBetterMove(ScoreType, ScoreType); // SIMULATED ANNEALING
 void ApplyMove(SolutionType&, const MoveType&);
 void PrintSolution(string);
+
+double GlobalTemperature = 1.0, CoolingFactor = 0.99999;
+random_device rd;
+default_random_engine eng(rd());
+uniform_real_distribution<double> prob(0.0, 1.0);
 
 
 int C, K;
@@ -270,9 +275,12 @@ void DoMagic()
 
         t1 = chrono::high_resolution_clock::now();
 
+        GlobalTemperature *= CoolingFactor;
+
     }while( chrono::duration<double>(t1 - t0).count() < TIME_LIMIT );
 
     cerr << "Optimized score: " << bestScore << "\t\t[Improvement: " << 1. * abs(bestScore - initialScore) / bestScore << "]" << endl;
+    cerr << "Global Temperature is " << GlobalTemperature << endl;
 }
 
 
@@ -307,9 +315,15 @@ ScoreType DeltaCost(const SolutionType & sol, const MoveType & mv)
     return delta;
 }
 
+// SIMULATED ANNEALING
 bool IsBetterMove(ScoreType newDelta, ScoreType oldDelta)
 {
-    return newDelta * (MAXIMIZE ? +1 : -1) > oldDelta * (MAXIMIZE ? +1 : -1);
+    if( newDelta * (MAXIMIZE ? -1 : +1) > 0.0 ) {
+        double p = exp((MAXIMIZE ? +1 : -1) * newDelta / GlobalTemperature);
+        return p > prob(eng);
+    }
+
+    return true;
 }
 
 MoveType DrawRandomMove(PRNG & Random)
