@@ -1,11 +1,13 @@
 #include <bits/stdc++.h>
-#include "utils.cpp"    // ScoreManager, Rand
+#include "utils.cpp"    // ScoreManager, TimeManager, Random
 using namespace std;
+using namespace chrono;
+
 constexpr array<const char*, 1> ValidNames = {{"ADD-VALID-NAMES!!!"}};
 string ProblemName;
 uint64_t SEED = 0;
 size_t CANDIDATE_MOVES = 1;
-double TIME_LIMIT = oo;
+seconds TIME_LIMIT(oo);
 
 bool MAXIMIZE = true;
 
@@ -80,7 +82,7 @@ void ArgSanitize(int argc, char** argv)
                 }
             }else if(arg == "time-limit") {
                 if(i+1 < argc) {
-                    TIME_LIMIT = atoi(argv[i+1]);
+                    TIME_LIMIT = seconds(atoi(argv[i+1]));
                     i += 2;
                 }else {
                     cerr << "Missing time-limit after `--time-limit` argument!" << endl;
@@ -120,7 +122,7 @@ void ArgSanitize(int argc, char** argv)
         cerr << "Warning! SEED set to 0!" << endl;
     }
 
-    if(TIME_LIMIT == oo) {
+    if(TIME_LIMIT == seconds(oo)) {
         cerr << "Warning! TIME_LIMIT set to infinity!" << endl;
     }
 
@@ -157,13 +159,14 @@ void DoMagic()
 {
     cerr << "Invoking the power of the underworld..." << endl;
 
-    auto t0 = chrono::high_resolution_clock::now();
+    auto t0 =   high_resolution_clock::now();
     auto t1 = t0;
 
     SolutionType current = best = initial;
     ScoreType initialScore = GetScore(current);
     ScoreType bestScore = initialScore;
     ScoreManager<ScoreType> scoreManager(initialScore, MAXIMIZE);
+    TimeManager timeManager(TIME_LIMIT);
 
     PRNG prng(SEED);
 
@@ -201,10 +204,9 @@ void DoMagic()
 	        best = current;
         }
 
+        timeManager.update();
 
-        t1 = chrono::high_resolution_clock::now();
-
-    }while( chrono::duration<double>(t1 - t0).count() < TIME_LIMIT );
+    }while( timeManager.alive() );
 
     cerr << "Optimized score: " << bestScore << "\t\t[Improvement: " << 1. * abs(bestScore - initialScore) / bestScore << "]" << endl;
 }
