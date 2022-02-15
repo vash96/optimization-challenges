@@ -36,9 +36,12 @@ struct ScoreManager {
         score += delta;
         if(static_cast<double>(score-lastUpdate) * (MAXIMIZE ? +1 : -1) >= threshold * lastUpdate * (MAXIMIZE ? +1 : -1)) {
             // If score incremented more than threshold % print
-            cerr << "Current score: " << score << "\t\t[Improvement: " << (score-lastUpdate) << "]\n";
+            cerr << "Current score: " << score << "\t\t[Improvement: " << (score-lastUpdate) << "]";
+            
             lastUpdate = score;
-            threshold *= 0.98;
+            threshold *= 0.99;
+            
+            cerr << "\t\t [Next checkpoint at " << lastUpdate*(1+threshold) << "]\n";
         }
     }
 };
