@@ -170,7 +170,7 @@ void DoMagic()
     do {
         // Draw some number of random moves and apply the best one
 
-        vector<ScoreType> delta(CANDIDATE_MOVES, MAXIMIZE ? oo : -oo);
+        vector<ScoreType> delta(CANDIDATE_MOVES, MAXIMIZE ? -oo : +oo);
         vector<MoveType> candidate(CANDIDATE_MOVES);
 
         #pragma omp parallel for
@@ -182,15 +182,19 @@ void DoMagic()
 
         ScoreType bestDelta = MAXIMIZE ? -oo : +oo;
         MoveType bestMove; // SET CORRECT DUMMY MOVE
+        bool apply_move = false;
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
             if( IsBetterMove(delta[r], bestDelta) ) {
                 bestDelta = delta[r];
                 bestMove = candidate[r];
+                apply_move = true;
             }
         }
 
-        ApplyMove(current, bestMove);
-        scoreManager += bestDelta;
+        if(apply_move) {
+            ApplyMove(current, bestMove);
+            scoreManager += bestDelta;
+        }
 
         if(bestDelta * (MAXIMIZE ? +1 : -1) > 0) {
             bestScore = scoreManager.score;
@@ -213,10 +217,17 @@ ScoreType GetScore(const SolutionType & sol)
     return score;
 }
 
+MoveType DrawRandomMove(PRNG & prng)
+{
+    MoveType mv; // Assign random move!
+    return mv;
+}
+
 ScoreType DeltaCost(const SolutionType & sol, const MoveType & mv)
 {
-    int delta=0;
+    ScoreType delta=0;
     SolutionType tmp(sol);
+    ApplyMove(tmp, mv);
     delta = GetScore(tmp) - GetScore(sol);
 
     return delta;
