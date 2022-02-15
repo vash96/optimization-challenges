@@ -144,6 +144,8 @@ void ReadInput(string filename)
 
 }
 
+
+// Random pizza
 void Greedy()
 {
     cerr << "Pot of Greed: draw 2 cards." << endl;

@@ -28,7 +28,7 @@ struct ScoreManager {
     bool MAXIMIZE;
     double threshold;
 
-    ScoreManager(ScoreType score, bool MAXIMIZE=false, double threshold=0.05)
+    ScoreManager(ScoreType score, bool MAXIMIZE=true, double threshold=0.05)
         : score(score), lastUpdate(score), MAXIMIZE(MAXIMIZE), threshold(threshold) { }
 
     void operator+=(ScoreType delta) {
@@ -37,6 +37,7 @@ struct ScoreManager {
             // If score incremented more than threshold % print
             cerr << "Current score: " << score << "\t\t[Improvement: " << (score-lastUpdate) << "]\n";
             lastUpdate = score;
+            threshold *= 0.99;
         }
     }
 };

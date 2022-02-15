@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include "utils.cpp"    // ScoreManager, Rand
 using namespace std;
-constexpr array<const char*, 1> ValidNames = {{"ADD-VALID-NAMES!!!"}};
+constexpr array<const char*, 5> ValidNames = {{"a", "b", "c", "d", "e"}};
 string ProblemName;
 uint64_t SEED = 0;
 size_t CANDIDATE_MOVES = 1;
@@ -11,7 +11,8 @@ bool MAXIMIZE = true;
 
 
 using ScoreType = int64_t; // CHANGE IF NEEDED
-
+using SolutionType = vector<bool>; // Vector of 0/1 if ingredient is present in the solution
+using MoveType = int; // A move inserts/deletes an ingredient from the pizza
 
 
 
@@ -19,16 +20,59 @@ void ArgSanitize(int, char**);
 void ReadInput(string);
 void ReadSolution(string);
 void DoMagic();
-ScoreType GetScore(/*const SolutionType&*/);
-ScoreType DeltaCost(/*const SolutionType&, const MoveType&*/);
-void ApplyMove(/*SolutionType&, const MoveType&*/);
+ScoreType GetScore(const SolutionType&);
+ScoreType DeltaCost(const SolutionType&, const MoveType&);
+MoveType DrawRandomMove(PRNG&);
+void ApplyMove(SolutionType&, const MoveType&);
 void PrintSolution(string);
 
 
+int C, K;
+map<string, int> ingr_to_id;
+vector<string> id_to_ingr;
+
+struct Client {
+    int L, D;
+    vector<int> likes, dislikes;
+
+    void read(ifstream & cin) {
+
+        cin >> L;
+        for(int i=0; i<L; ++i) {
+            static string ingr_name;
+            cin >> ingr_name;
+            if(ingr_to_id.find(ingr_name) == ingr_to_id.end()) {
+                cerr << "New ingredient " << ingr_name << "!\n";
+                ingr_to_id[ingr_name] = id_to_ingr.size();
+                id_to_ingr.emplace_back(ingr_name);
+            }
+
+            likes.emplace_back(ingr_to_id[ingr_name]);
+        }
+
+        cin >> D;
+        for(int i=0; i<D; ++i) {
+            static string ingr_name;
+            cin >> ingr_name;
+            if(ingr_to_id.find(ingr_name) == ingr_to_id.end()) {
+                cerr << "New ingredient " << ingr_name << "!\n";
+                ingr_to_id[ingr_name] = id_to_ingr.size();
+                id_to_ingr.emplace_back(ingr_name);
+            }
+
+            dislikes.emplace_back(ingr_to_id[ingr_name]);
+        }
+    }
+};
+
+
+vector<Client> clients;
+vector<vector<int>> who_likes, who_dislikes;
 
 
 
-// SolutionType solution
+
+SolutionType initial, best;
 
 
 int main(int argc, char** argv)
@@ -135,6 +179,27 @@ void ReadInput(string filename)
     }
 
     cerr << "Reading input from " << filename << " ... " << endl;
+    in >> C;
+    clients.resize(C);
+
+    for(int i=0; i<C; ++i) {
+        auto & client = clients[i];
+        client.read(in);
+    }
+
+    K = ingr_to_id.size();
+    who_likes.resize(K);
+    who_dislikes.resize(K);
+    for(int i=0; i<C; ++i) {
+        auto & client = clients[i];
+        for(const auto ingr : client.likes) {
+            who_likes[ingr].emplace_back(i);
+        }
+        for(const auto ingr : client.dislikes) {
+            who_dislikes[ingr].emplace_back(i);
+        }
+    }
+    initial.resize(K, false);
 }
 
 void ReadSolution(string filename)
@@ -147,6 +212,13 @@ void ReadSolution(string filename)
 
     // Fill "solution" variable
     cerr << "Reading solution from " << filename << " ... " << endl;
+    int I;
+    in >> I;
+    for(int i=0; i<I; ++i) {
+        static string ingr;
+        in >> ingr;
+        initial[ ingr_to_id[ingr] ] = true;
+    }
 }
 
 void DoMagic()
@@ -156,38 +228,40 @@ void DoMagic()
     auto t0 = chrono::high_resolution_clock::now();
     auto t1 = t0;
 
-    // SolutionType current = solution;
-    ScoreType initialScore = GetScore(/*current*/);
+    SolutionType current = best = initial;
+    ScoreType initialScore = GetScore(initial);
     ScoreType bestScore = initialScore;
     ScoreManager<ScoreType> scoreManager(initialScore, MAXIMIZE);
+
+    PRNG prng(SEED);
 
     do {
         // Draw some number of random moves and apply the best one
 
         vector<ScoreType> delta(CANDIDATE_MOVES, MAXIMIZE ? oo : -oo);
-        // vector<MoveType> candidate(RAND_LIMIT);
+        vector<MoveType> candidate(CANDIDATE_MOVES);
         #pragma omp parallel for
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
-            // MoveType mv = DrawRandomMove();
-            delta[r] = DeltaCost(/*current, mv*/);
-            // candidate[r] = mv;
+            MoveType mv = DrawRandomMove(prng);
+            delta[r] = DeltaCost(current, mv);
+            candidate[r] = mv;
         }
 
-        ScoreType bestDelta = MAXIMIZE ? oo : -oo;
-        // MoveType bestMove = -1;
+        ScoreType bestDelta = MAXIMIZE ? -oo : +oo;
+        MoveType bestMove = -1;
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
             if(delta[r] * (MAXIMIZE ? +1 : -1) > bestDelta * (MAXIMIZE ? +1 : -1)) {
                 bestDelta = delta[r];
-                // bestMove = candidate[r];
+                bestMove = candidate[r];
             }
         }
 
-        ApplyMove(/*current, bestMove*/);
+        ApplyMove(current, bestMove);
         scoreManager += bestDelta;
 
         if(bestDelta > 0) {
             bestScore = scoreManager.score;
-	    // solution = current;
+	        best = current;
         }
 
 
@@ -199,23 +273,46 @@ void DoMagic()
 }
 
 
-ScoreType GetScore(/*const SolutionType & sol*/)
+ScoreType GetScore(const SolutionType & sol)
 {
     ScoreType score=0;
+    for(int i=0; i<C; ++i) {
+        const auto & client = clients[i];
+        bool is_sat = true;
+        for(size_t j=0; is_sat and j<client.dislikes.size(); ++j) {
+            size_t ingr = client.dislikes[j];
+            is_sat = is_sat and (not sol[ingr]);
+        }
+        for(size_t j=0; is_sat and j<client.likes.size(); ++j) {
+            size_t ingr = client.likes[j];
+            is_sat = is_sat and sol[ingr];
+        }
+
+        score += is_sat;
+    }
 
     return score;
 }
 
-ScoreType DeltaCost(/*const SolutionType & sol, const MoveType & mv*/)
+ScoreType DeltaCost(const SolutionType & sol, const MoveType & mv)
 {
-    int delta=0;
+    ScoreType delta=0;
+
+    auto tmp(sol);
+    ApplyMove(tmp, mv);
+    delta = GetScore(tmp) - GetScore(sol);
 
     return delta;
 }
 
-void ApplyMove(/*SolutionType & sol, const MoveType & mv*/)
+MoveType DrawRandomMove(PRNG & Random)
 {
+    return Random() % K;
+}
 
+void ApplyMove(SolutionType & sol, const MoveType & mv)
+{
+    sol[mv] = sol[mv] ? false : true;
 }
 
 
@@ -226,6 +323,14 @@ void PrintSolution(string filename)
     cerr << "Writing solution to file " << filename << " ... " << endl;
 
     // Print "solution" variable
+    int M = count_if(best.begin(), best.end(), [](bool x) { return x; });
+    out << M << " ";
+    for(int i=0; i<K; ++i) {
+        if(best[i]) {
+            out << id_to_ingr[i] << " ";
+        }
+    }
+    out << endl;
 }
 
 
