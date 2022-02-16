@@ -12,7 +12,10 @@ bool MAXIMIZE = true;
 
 
 using ScoreType = int64_t; // CHANGE IF NEEDED
-using SolutionType = vector<bool>; // Vector of 0/1 if ingredient is present in the solution
+struct SolutionType {
+    vector<bool> pizza;
+    vector<int> liked_in, disliked_in;
+};
 using MoveType = int; // A move inserts/deletes an ingredient from the pizza
 
 
@@ -76,8 +79,6 @@ struct Client {
 
 vector<Client> clients;
 vector<vector<int>> who_likes, who_dislikes;
-vector<int> liked_in, disliked_in;
-
 
 SolutionType best, initial;
 
@@ -188,9 +189,7 @@ void ReadInput(string filename)
     cerr << "Reading input from " << filename << " ... " << endl;
     in >> C;
     clients.resize(C);
-    liked_in.resize(C, 0);
-    disliked_in.resize(C, 0);
-
+    
     for(int i=0; i<C; ++i) {
         auto & client = clients[i];
         client.read(in);
@@ -208,7 +207,6 @@ void ReadInput(string filename)
             who_dislikes[ingr].emplace_back(i);
         }
     }
-    initial.resize(K, false);
 }
 
 void ReadSolution(string filename)
@@ -221,17 +219,22 @@ void ReadSolution(string filename)
 
     // Fill "solution" variable
     cerr << "Reading solution from " << filename << " ... " << endl;
+
+    initial.pizza.resize(K, false);
+    initial.liked_in.resize(C, 0);
+    initial.disliked_in.resize(C, 0);
+
     int I;
     in >> I;
     for(int i=0; i<I; ++i) {
         static string ingr;
         in >> ingr;
-        initial[ ingr_to_id[ingr] ] = true;
+        initial.pizza[ ingr_to_id[ingr] ] = true;
         for(auto i : who_likes[ ingr_to_id[ingr] ]) {
-            ++liked_in[i];
+            ++initial.liked_in[i];
         }
         for(auto i : who_dislikes[ ingr_to_id[ingr] ]) {
-            ++disliked_in[i];
+            ++initial.disliked_in[i];
         }
     }
 }
@@ -295,7 +298,7 @@ void DoMagic()
 
     cerr << "Optimized score: " << bestScore << "\t\t[Improvement: " << 1. * abs(bestScore - initialScore) / bestScore << "]" << endl;
     cerr << "Global Temperature is " << GlobalTemperature << endl;
-    cerr << "Number of iterations: " << n_iter << endl;
+    cerr << "Number of iterations: " << n_iter/1'000'000 << " millions\n" << endl;
 }
 
 
@@ -307,11 +310,11 @@ ScoreType GetScore(const SolutionType & sol)
         bool is_sat = true;
         for(size_t j=0; is_sat and j<client.dislikes.size(); ++j) {
             size_t ingr = client.dislikes[j];
-            is_sat = is_sat and (not sol[ingr]);
+            is_sat = is_sat and (not sol.pizza[ingr]);
         }
         for(size_t j=0; is_sat and j<client.likes.size(); ++j) {
             size_t ingr = client.likes[j];
-            is_sat = is_sat and sol[ingr];
+            is_sat = is_sat and sol.pizza[ingr];
         }
 
         score += is_sat;
@@ -323,8 +326,10 @@ ScoreType GetScore(const SolutionType & sol)
 ScoreType DeltaCost(const SolutionType & sol, const MoveType & mv)
 {
     ScoreType delta=0;
+    const auto & liked_in = sol.liked_in;
+    const auto & disliked_in = sol.disliked_in;
 
-    if(sol[mv]) { // We are removing mv from current sol
+    if(sol.pizza[mv]) { // We are removing mv from current sol
         for(auto i : who_likes[mv]) {
                 delta -= liked_in[i] == clients[i].L and disliked_in[i] == 0;
         }
@@ -379,15 +384,15 @@ MoveType DrawRandomMove(PRNG & Random)
 
 void ApplyMove(SolutionType & sol, const MoveType & mv)
 {
-    int val = sol[mv] ? -1 : +1;
-    sol[mv] = sol[mv] ? false : true;
+    int val = sol.pizza[mv] ? -1 : +1;
+    sol.pizza[mv] = sol.pizza[mv] ? false : true;
 
     for(auto i : who_likes[mv]) {
-        liked_in[i] += val;
+        sol.liked_in[i] += val;
     }
     
     for(auto i : who_dislikes[mv]) {
-        disliked_in[i] += val;
+        sol.disliked_in[i] += val;
     }
 }
 
@@ -399,10 +404,10 @@ void PrintSolution(string filename)
     cerr << "Writing solution to file " << filename << " ... " << endl;
 
     // Print "best"
-    int M = count_if(best.begin(), best.end(), [](bool x) { return x; });
+    int M = count_if(best.pizza.begin(), best.pizza.end(), [](bool x) { return x; });
     out << M << " ";
     for(int i=0; i<K; ++i) {
-        if(best[i]) {
+        if(best.pizza[i]) {
             out << id_to_ingr[i] << " ";
         }
     }
