@@ -196,7 +196,7 @@ void DoMagic()
             scoreManager += bestDelta;
         }
 
-        if(bestDelta * (MAXIMIZE ? +1 : -1) > 0) {
+        if(scoreManager.score * (MAXIMIZE ? +1 : -1) > bestScore * (MAXIMIZE ? +1 : -1)) {
             bestScore = scoreManager.score;
 	        best = current;
         }
@@ -234,9 +234,9 @@ ScoreType DeltaCost(const SolutionType & sol, const MoveType & mv)
         // This part of the code will be executed only in the debug exe
         ScoreType realDelta = 0;
 
-        SolutionType tmp(sol);
-        ApplyMove(tmp, mv);
-        realDelta = GetScore(tmp) - GetScore(sol);
+        SolutionType tmp2(sol);
+        ApplyMove(tmp2, mv);
+        realDelta = GetScore(tmp2) - GetScore(sol);
 
         if(realDelta != delta) {
             cerr << "Error: mismatch of Move Cost! Either DeltaCost is wrong or you are not maintaining correctly the state of the solution!" << endl;
