@@ -158,6 +158,7 @@ bool IsBetterMove(ScoreType, ScoreType); // CHANGE THIS TO ADAPT TO SIMULATED AN
 void ApplyMove(SolutionType&, const MoveType&);
 void PrintSolution(string);
 
+bool Feasible(const SolutionType&, const MoveType&);
 
 
 
@@ -341,7 +342,7 @@ void DoMagic()
         MoveType bestMove = {-1, -1, Tile::EEE}; // SET CORRECT DUMMY MOVE
         bool apply_move = false;
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
-            if( IsBetterMove(delta[r], bestDelta) ) {
+            if( Feasible(current, candidate[r]) and IsBetterMove(delta[r], bestDelta) ) {
                 bestDelta = delta[r];
                 bestMove = candidate[r];
                 apply_move = true;
@@ -387,7 +388,7 @@ ScoreType GetScore(const SolutionType & sol)
 
 MoveType DrawRandomMove(PRNG & prng)
 {
-    MoveType mv = {prng() % int64_t(n) +2, prng() % int64_t(n) +2, drawable[ prng() % 8 ]}; // Assign random move!
+    MoveType mv = {prng() % uint64_t(n) +2, prng() % uint64_t(n) +2, drawable[ prng() % 8 ]}; // Assign random move!
     return mv;
 }
 
@@ -548,6 +549,7 @@ void Insert(SolutionType & board, const MoveType & mv) {
 
                 default:
                     cerr << "Unknown case in inner switch!\n";
+                    cerr << "Tile is " << sym[board[x][y]] << "\n";
                     exit(1);
             }
             break;
@@ -588,6 +590,7 @@ void Insert(SolutionType & board, const MoveType & mv) {
             break;
         default:
             cerr << "Unknown case in outer switch!\n";
+            cerr << "Tile is " << sym[tile] << "\n";
             exit(1);
     }
 }
