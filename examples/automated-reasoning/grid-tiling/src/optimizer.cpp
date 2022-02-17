@@ -435,10 +435,9 @@ ScoreType DeltaCost(const SolutionType & sol, const MoveType & mv)
         return oo;
     }
 
-    ScoreType delta=0;
-    SolutionType tmp(sol);
-    ApplyMove(tmp, mv);
-    delta = GetScore(tmp) - GetScore(sol);
+    Tile tile = mv.tile == Tile::EEE ? sol[mv.x][mv.y] : mv.tile;
+    ScoreType delta = 3 + (tile == Tile::S11);
+    delta *= mv.tile == Tile::EEE ? +1 : -1;
 
     #ifndef NDEBUG
         // This will check if your non-trivial implementation of DeltaCost is consistent.
