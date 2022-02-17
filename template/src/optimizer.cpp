@@ -173,7 +173,7 @@ void DoMagic()
         vector<ScoreType> delta(CANDIDATE_MOVES, MAXIMIZE ? -oo : +oo);
         vector<MoveType> candidate(CANDIDATE_MOVES);
 
-        #pragma omp parallel for
+        #pragma omp parallel for if(CANDIDATE_MOVES >= 8000)
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
             MoveType mv = DrawRandomMove(prng);
             delta[r] = DeltaCost(current, mv);
