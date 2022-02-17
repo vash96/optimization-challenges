@@ -40,10 +40,10 @@ enum Tile {
     L23, 
     
     L33, L32, 
-    L31, 
+         L31, 
     
-        L43, 
-    L42, L41 
+         L43, 
+    L41, L42
 };
 
 array<string, 24> sym = {{ 
@@ -303,6 +303,23 @@ void ReadSolution(string filename)
             static string cell;
             in >> cell;
             initial[x][y] = antisym[cell];
+            switch(initial[x][y]) {
+                case Tile::S11:
+                    --initial.s;
+                    break;
+                
+                case Tile::R11:
+                case Tile::R21:
+                    --initial.r;
+                    break;
+                
+                case Tile::L11:
+                case Tile::L21:
+                case Tile::L31:
+                case Tile::L41:
+                    --initial.l;
+                    break;
+            }
         }
     }
 }
@@ -495,15 +512,15 @@ int L1(const SolutionType & board, int x, int y) {
 }
 
 int L2(const SolutionType & board, int x, int y) {
-    return 3 - (eee(x,y+1) + eee(x,y) + eee(x+1,y));
+    return 3 - (eee(x,y-1) + eee(x,y) + eee(x+1,y-1));
 }
 
 int L3(const SolutionType & board, int x, int y) {
-    return 3 - (eee(x+1,y+1) + eee(x,y+1) + eee(x,y));
+    return 3 - (eee(x-1,y) + eee(x-1,y-1) + eee(x,y));
 }
 
 int L4(const SolutionType & board, int x, int y) {
-    return 3 - (eee(x+1,y) + eee(x+1,y+1) + eee(x,y+1));
+    return 3 - (eee(x,y) + eee(x,y+1) + eee(x-1,y+1));
 }
 
 
@@ -536,15 +553,15 @@ void Insert(SolutionType & board, const MoveType & mv) {
                     break;
                 case Tile::L21:
                     ++l;
-                    board[x][y] = board[x][y+1] = board[x+1][y] = Tile::EEE;
+                    board[x][y] = board[x][y-1] = board[x+1][y-1] = Tile::EEE;
                     break;
                 case Tile::L31:
                     ++l;
-                    board[x][y] = board[x][y+1] = board[x+1][y+1] = Tile::EEE;
+                    board[x][y] = board[x-1][y] = board[x-1][y-1] = Tile::EEE;
                     break;
                 case Tile::L41:
                     ++l;
-                    board[x][y+1] = board[x+1][y] = board[x+1][y+1] = Tile::EEE;
+                    board[x][y] = board[x][y+1] = board[x-1][y+1] = Tile::EEE;
                     break;
 
                 default:
@@ -575,18 +592,18 @@ void Insert(SolutionType & board, const MoveType & mv) {
             break;
         case Tile::L21:
             --l;
-            board[x][y] = Tile::L22;    board[x][y+1] = Tile::L21;
-            board[x+1][y] = Tile::L23;
+            board[x][y-1] = Tile::L22;    board[x][y] = Tile::L21;
+            board[x+1][y-1] = Tile::L23;
             break;
         case Tile::L31:
             --l;
-            board[x][y] = Tile::L33;    board[x][y+1] = Tile::L32;
-                                        board[x+1][y+1] = Tile::L31;
+            board[x-1][y-1] = Tile::L33;    board[x-1][y] = Tile::L32;
+                                            board[x][y] = Tile::L31;
             break;
         case Tile::L41:
             --l;
-                                        board[x][y+1] = Tile::L43;
-            board[x+1][y] = Tile::L41;  board[x+1][y+1] = Tile::L42;
+                                        board[x-1][y+1] = Tile::L43;
+            board[x][y] = Tile::L41;    board[x][y+1] = Tile::L42;
             break;
         default:
             cerr << "Unknown case in outer switch!\n";

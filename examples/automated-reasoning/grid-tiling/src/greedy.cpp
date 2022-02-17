@@ -34,10 +34,10 @@ enum Tile {
     L23, 
     
     L33, L32, 
-    L31, 
+         L31, 
     
-        L43, 
-    L42, L41 
+         L43, 
+    L41, L42
 };
 
 array<string, 24> sym = {{ 
@@ -67,6 +67,7 @@ array<string, 24> sym = {{
 }};
 
 vector<vector<Tile>> board;
+array<Tile, 9> drawable = {{XXX, EEE, S11, R11, R21, L11, L21, L31, L41}};
 
 int n, s, r, l, f;
 
@@ -83,7 +84,7 @@ int L3(int, int);
 int L4(int, int);
 
 
-void Insert(int, int, int);
+void Insert(Tile, int, int);
 
 
 
@@ -165,6 +166,7 @@ void ReadInput(string filename)
     board.resize(n+4, vector<Tile>(n+4, Tile::EEE));
     for(int i=0; i<=n+3; ++i) {
         board[0][i] = board[i][0] = board[n+3][i] = board[i][n+3] = Tile::XXX;
+        board[1][i] = board[i][1] = board[n+2][i] = board[i][n+2] = Tile::XXX;
     }
 
     for(int i=0; i<f; ++i) {
@@ -196,7 +198,7 @@ void Greedy()
             for(; p<9 and cost[p] > 0; ++p) { }
 
             if(p < 9) {
-                Insert(p, x, y);
+                Insert(drawable[p], x, y);
             }
         }
 
@@ -239,54 +241,61 @@ int L1(int x, int y) {
 }
 
 int L2(int x, int y) {
-    return 3 - (eee(x,y+1) + eee(x,y) + eee(x+1,y));
+    return 3 - (eee(x,y-1) + eee(x,y) + eee(x+1,y-1));
 }
 
 int L3(int x, int y) {
-    return 3 - (eee(x+1,y+1) + eee(x,y+1) + eee(x,y));
+    return 3 - (eee(x-1,y) + eee(x-1,y-1) + eee(x,y));
 }
 
 int L4(int x, int y) {
-    return 3 - (eee(x+1,y) + eee(x+1,y+1) + eee(x,y+1));
+    return 3 - (eee(x-1,y+1) + eee(x,y+1) + eee(x,y));
 }
 
 
-void Insert(int tile, int x, int y) {
+void Insert(Tile tile, int x, int y) {
     switch(tile) {
-        case 2:
+        case Tile::S11:
             --s;
             board[x][y] = Tile::S11;    board[x][y+1] = Tile::S12;
             board[x+1][y] = Tile::S13;  board[x+1][y+1] = Tile::S14;
             break;
-        case 3:
+        case Tile::R11:
             --r;
             board[x][y] = Tile::R11; board[x][y+1] = Tile::R12; board[x][y+2] = Tile::R13;
             break;
-        case 4:
+        case Tile::R21:
             --r;
             board[x][y] = Tile::R21; 
             board[x+1][y] = Tile::R22; 
             board[x+2][y] = Tile::R23;
             break;
-        case 5:
+        case Tile::L11:
             --l;
+            assert(board[x][y] == Tile::EEE and board[x+1][y] == Tile::EEE and  board[x+1][y+1] == Tile::EEE);
             board[x][y] = Tile::L11;
             board[x+1][y] = Tile::L12;  board[x+1][y+1] = Tile::L13;
             break;
-        case 6:
+        case Tile::L21:
             --l;
-            board[x][y] = Tile::L22;    board[x][y+1] = Tile::L21;
-            board[x+1][y] = Tile::L23;
+            assert(board[x][y] == Tile::EEE and board[x+1][y-1] == Tile::EEE and  board[x+1][y-1] == Tile::EEE);
+            board[x][y-1] = Tile::L22;    board[x][y] = Tile::L21;
+            board[x+1][y-1] = Tile::L23;
             break;
-        case 7:
+        case Tile::L31:
             --l;
-            board[x][y] = Tile::L33;    board[x][y+1] = Tile::L32;
-                                        board[x+1][y+1] = Tile::L31;
+            assert(board[x][y] == Tile::EEE and board[x-1][y-1] == Tile::EEE and  board[x-1][y] == Tile::EEE);
+            board[x-1][y-1] = Tile::L33;    board[x-1][y] = Tile::L32;
+                                            board[x][y] = Tile::L31;
             break;
-        case 8:
+        case Tile::L41:
             --l;
-                                        board[x][y+1] = Tile::L43;
-            board[x+1][y] = Tile::L41;  board[x+1][y+1] = Tile::L42;
+            assert(board[x][y] == Tile::EEE and board[x-1][y+1] == Tile::EEE and  board[x][y+1] == Tile::EEE);
+                                        board[x-1][y+1] = Tile::L43;
+            board[x][y] = Tile::L41;    board[x][y+1] = Tile::L42;
             break;
+        default:
+            cerr << "Dio bono svegliati!\n";
+            exit(1);
     }
 }
