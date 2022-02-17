@@ -77,6 +77,6 @@ struct TimeManager {
     }
 
     bool event() {
-        return passed > threshold;
+        return passed > threshold or passed > lifetime;
     }
 };
