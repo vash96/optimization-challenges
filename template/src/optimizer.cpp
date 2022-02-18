@@ -11,6 +11,8 @@ seconds TIME_LIMIT(oo);
 
 bool MAXIMIZE = true;
 
+PRNG prng;
+
 
 using ScoreType = int64_t; // CHANGE IF NEEDED
 using SolutionType = vector<int>; // CHANGE IF NEEDED
@@ -23,8 +25,9 @@ void ArgSanitize(int, char**);
 void ReadInput(string);
 void ReadSolution(string);
 void DoMagic();
+vector<MoveType> Neighbourhood(const SolutionType&);
 ScoreType GetScore(const SolutionType&);
-MoveType DrawRandomMove(PRNG&);
+MoveType DrawRandomMove();
 ScoreType DeltaCost(const SolutionType&, const MoveType&);
 bool IsBetterMove(ScoreType, ScoreType); // CHANGE THIS TO ADAPT TO SIMULATED ANNEALING
 void ApplyMove(SolutionType&, const MoveType&);
@@ -164,20 +167,17 @@ void DoMagic()
     ScoreType bestScore = initialScore;
     ScoreManager<ScoreType> scoreManager(initialScore, MAXIMIZE);
     TimeManager timeManager(TIME_LIMIT);
-
-    PRNG prng(SEED);
+    
+    prng.seed = SEED;
 
     do {
         // Draw some number of random moves and apply the best one
-
         vector<ScoreType> delta(CANDIDATE_MOVES, MAXIMIZE ? -oo : +oo);
-        vector<MoveType> candidate(CANDIDATE_MOVES);
+        const auto candidate = Neighbourhood(current);
 
-        #pragma omp parallel for if(CANDIDATE_MOVES >= 8000)
+        #pragma omp parallel for if (CANDIDATE_MOVES >= 8000)
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
-            MoveType mv = DrawRandomMove(prng);
-            delta[r] = DeltaCost(current, mv);
-            candidate[r] = mv;
+            delta[r] = DeltaCost(current, candidate[r]);
         }
 
         ScoreType bestDelta = MAXIMIZE ? -oo : +oo;
@@ -216,7 +216,19 @@ ScoreType GetScore(const SolutionType & sol)
     return score;
 }
 
-MoveType DrawRandomMove(PRNG & prng)
+vector<MoveType> Neighbourhood(const SolutionType & current)
+{
+    vector<MoveType> candidates(CANDIDATE_MOVES);
+
+    #pragma omp parallel for if (CANDIDATE_MOVES >= 8000)
+    for(size_t r=0; r < CANDIDATE_MOVES; ++r) {
+        candidates[r] = DrawRandomMove();
+    }
+
+    return candidates;
+}
+
+MoveType DrawRandomMove()
 {
     MoveType mv; // Assign random move!
     return mv;
