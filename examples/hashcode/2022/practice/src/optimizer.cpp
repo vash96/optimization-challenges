@@ -10,6 +10,7 @@ seconds TIME_LIMIT(oo);
 
 bool MAXIMIZE = true;
 
+PRNG prng;
 
 using ScoreType = int64_t; // CHANGE IF NEEDED
 struct SolutionType {
@@ -25,8 +26,9 @@ void ArgSanitize(int, char**);
 void ReadInput(string);
 void ReadSolution(string);
 void DoMagic();
+vector<MoveType> Neighbourhood(const SolutionType&);
 ScoreType GetScore(const SolutionType&);
-MoveType DrawRandomMove(PRNG&);
+MoveType DrawRandomMove();
 ScoreType DeltaCost(const SolutionType&, const MoveType&);
 bool IsBetterMove(ScoreType, ScoreType); // SIMULATED ANNEALING
 void ApplyMove(SolutionType&, const MoveType&);
@@ -250,7 +252,7 @@ void DoMagic()
     TimeManager timeManager(TIME_LIMIT);
     TimeManager<false> coolingSchedule(TIME_LIMIT, 5ms);
 
-    PRNG prng(SEED);
+    prng.seed = SEED;
 
     int64_t n_iter = 0;
     do {
@@ -258,13 +260,11 @@ void DoMagic()
         ++n_iter;
 
         vector<ScoreType> delta(CANDIDATE_MOVES, MAXIMIZE ? -oo : +oo);
-        vector<MoveType> candidate(CANDIDATE_MOVES);
+        const auto candidate = Neighbourhood(current);
 
         #pragma omp parallel for if (CANDIDATE_MOVES >= 8000)
         for(size_t r=0; r<CANDIDATE_MOVES; ++r) {
-            MoveType mv = DrawRandomMove(prng);
-            delta[r] = DeltaCost(current, mv);
-            candidate[r] = mv;
+            delta[r] = DeltaCost(current, candidate[r]);
         }
 
         ScoreType bestDelta = MAXIMIZE ? -oo : +oo;
@@ -301,6 +301,18 @@ void DoMagic()
     cerr << "Number of iterations: " << n_iter/1'000'000 << " millions\n" << endl;
 }
 
+
+vector<MoveType> Neighbourhood(const SolutionType & current)
+{
+    vector<MoveType> candidates(CANDIDATE_MOVES);
+
+    #pragma omp parallel for if (CANDIDATE_MOVES >= 8000)
+    for(size_t r=0; r < CANDIDATE_MOVES; ++r) {
+        candidates[r] = DrawRandomMove();
+    }
+
+    return candidates;
+}
 
 ScoreType GetScore(const SolutionType & sol)
 {
@@ -377,9 +389,9 @@ bool IsBetterMove(ScoreType newDelta, ScoreType oldDelta)
     return true;
 }
 
-MoveType DrawRandomMove(PRNG & Random)
+MoveType DrawRandomMove()
 {
-    return Random() % K;
+    return prng() % K;
 }
 
 void ApplyMove(SolutionType & sol, const MoveType & mv)
